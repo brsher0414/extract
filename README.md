@@ -2,7 +2,6 @@
 
 ## 项目简介
 一个支持断点续传的文本相似度计算工具，适合处理大规模数据。  
-🚀 功能亮点：
 - 从 Excel/CSV 加载数据
 - 用 BERT 等模型生成文本向量
 - 自动续传中断任务
@@ -17,6 +16,7 @@ pip install -r requirements.txt
 
 # 运行程序
 python main.py
+```
 
 ## ⚙️ 配置指南
 ### 修改 `config.py`：
@@ -38,10 +38,11 @@ OUTPUT_STRUCTURE = {
 MODEL_NAME = "bert-base-chinese"  # 🤖 使用的中文模型
 BATCH_SIZE = 32                   # 🔢 每批处理32条文本
 MAX_LENGTH = 128                  # 📏 文本最大长度
+```
 
 ## ⏯️ 断点续传
 ### 使用方法
 ```bash
 # 中断后重新运行即可续传
 python main.py
-
+```
