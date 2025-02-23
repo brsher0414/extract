@@ -40,6 +40,16 @@ BATCH_SIZE = 32                   # 🔢 每批处理32条文本
 MAX_LENGTH = 128                  # 📏 文本最大长度
 ```
 
+##修改列映射 (main.py)
+```python
+COLUMN_MAPPING = {
+    "jd": 5,          # 📜 旧数据文本列
+    "taobao": 5,      # 📜 旧数据文本列
+    "kuaishou_new": 7,# 📜 旧数据文本列
+    "douyin_new": 6   # 📜 旧数据文本列
+}
+```
+
 ## ⏯️ 断点续传
 ### 使用方法
 ```bash
