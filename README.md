@@ -35,7 +35,7 @@ OUTPUT_STRUCTURE = {
 }
 
 # 模型参数
-MODEL_NAME = "bert-base-chinese"  # 🤖 使用的中文模型
+MODEL_NAME = "hfl/chinese-bert-wwm-ext"  # 🤖 使用的中文模型
 BATCH_SIZE = 512                  # 🔢 每批处理512条文本
 MAX_LENGTH = 64                   # 📏 文本最大长度
 ```
