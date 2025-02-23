@@ -36,8 +36,8 @@ OUTPUT_STRUCTURE = {
 
 # 模型参数
 MODEL_NAME = "bert-base-chinese"  # 🤖 使用的中文模型
-BATCH_SIZE = 32                   # 🔢 每批处理32条文本
-MAX_LENGTH = 128                  # 📏 文本最大长度
+BATCH_SIZE = 512                  # 🔢 每批处理512条文本
+MAX_LENGTH = 64                   # 📏 文本最大长度
 ```
 
 ##修改列映射 (main.py)
