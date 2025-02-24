@@ -59,19 +59,27 @@ class ReportProcessor:
         
         for chunk in np.array_split(data, len(data) // chunk_size + 1):
             grouped = chunk.groupby(self.group_columns, observed=True)
+            
+            # 修改点1：过滤空结果
             results = [
                 self._process_group(g, mask) 
                 for _, g in grouped
+                if not g.empty  # 👈 添加空组过滤
             ]
-            chunks.append(pd.concat(results, copy=False))
             
-            # 及时释放内存
-            del grouped, results
-            if (len(chunks) % 10) == 0:
-                pd.DataFrame().empty  
+            # 修改点2：忽略索引 + 过滤空结果
+            if results:
+                clean_results = [df for df in results if not df.empty]
+                if clean_results:
+                    chunks.append(pd.concat(clean_results, copy=False, ignore_index=True))
         
-        # 最终合并
-        result = pd.concat(chunks, copy=False)
+        # 最终合并（添加dtype保险）
+        result = pd.concat(chunks, copy=False, ignore_index=True).astype({
+            'SIMILARITY': 'float32',
+            'PLATFORM': 'category',
+            'CATCODE': 'category'
+        })
+        
         
         # 最终排序
         return result.sort_values(
