@@ -40,7 +40,7 @@ BATCH_SIZE = 512                  # 🔢 每批处理512条文本
 MAX_LENGTH = 64                   # 📏 文本最大长度
 ```
 
-##修改列映射 (main.py)
+## 修改列映射 (main.py)
 ```python
 COLUMN_MAPPING = {
     "jd": 5,          # 📜 旧数据文本列
