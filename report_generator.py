@@ -21,9 +21,9 @@ def get_latest_timestamp_dir(parent_dir):
     
     return max(timestamp_dirs)
 
-base_dir = r"C:\Users\libi4006\Downloads\extract-main\data"
-vectors_dir = os.path.join(base_dir, "vectors")
-indices_dir = os.path.join(base_dir, "indices")
+data_dir = os.path.join(BASE_DIR, "data")
+vectors_dir = os.path.join(data_dir, "vectors")
+indices_dir = os.path.join(data_dir, "indices")
 
 latest_timestamp = get_latest_timestamp_dir(vectors_dir)
 
