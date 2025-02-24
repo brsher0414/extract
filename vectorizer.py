@@ -33,8 +33,8 @@ class Vectorizer:
                 # 创建可扩展数据集
                 hf.create_dataset(
                     'vectors',
-                    shape=(0, self.model.config.hidden_size),  # 初始为空
-                    maxshape=(None, self.model.config.hidden_size),  # 第一维可扩展
+                    shape=(0, self.model.config.hidden_size), 
+                    maxshape=(None, self.model.config.hidden_size), 
                     dtype=VECTOR_DTYPE,
                     compression="gzip"
                 )
