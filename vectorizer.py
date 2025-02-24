@@ -5,7 +5,12 @@ import torch
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer, AutoModel
 from config import MODEL_NAME, VECTOR_DTYPE, BATCH_SIZE, MAX_LENGTH
-
+# 设置CPU并行计算线程（核心修改点）
+torch.set_num_threads(4)  # 设置PyTorch运算线程数
+torch.set_num_interop_threads(4)  # 设置互操作线程数
+os.environ["OMP_NUM_THREADS"] = "4"        # OpenMP线程
+os.environ["MKL_NUM_THREADS"] = "4"        # MKL数学库线程
+os.environ["TOKENIZERS_PARALLELISM"] = "true"  # 启用分词并行
 
 class Vectorizer:
     def __init__(self):
