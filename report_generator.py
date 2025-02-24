@@ -24,6 +24,8 @@ def get_latest_timestamp_dir(parent_dir):
 data_dir = os.path.join(BASE_DIR, "data")
 vectors_dir = os.path.join(data_dir, "vectors")
 indices_dir = os.path.join(data_dir, "indices")
+report_dir = os.path.join(BASE_DIR, "output/{timestamp}")
+
 
 latest_timestamp = get_latest_timestamp_dir(vectors_dir)
 
@@ -53,18 +55,25 @@ def generator():
 
     processor = ReportProcessor(
         group_columns=['PLATFORM', 'CATCODE'],
-        similarity_threshold=0.6,
+        similarity_threshold=0.7,
         top_n=20
     )
 
-    result_df = processor.process(new_data, similarities)
+    result_df, summary_df = processor.process(new_data, similarities)  # 解包两个返回值
 
-    report_dir = storage.get_path("reports")
+    # 导出结果数据
     result_df.to_excel(
         os.path.join(report_dir, f"low_similarity_{storage.timestamp}.xlsx"),
         index=False,
         engine='openpyxl'
     )
+        
+    summary_df.to_excel(
+        os.path.join(report_dir, f"summary_{storage.timestamp}.xlsx"),
+        index=False,
+        engine='openpyxl'
+    )
+
 
     plt.hist(similarities.flatten(), bins=50)
     plt.savefig(os.path.join(report_dir, f"similarity_dist_{storage.timestamp}.png"))
