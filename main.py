@@ -17,6 +17,7 @@ COLUMN_MAPPING = {
     "douyin_new": 6
 }
 report_dir = os.path.join(BASE_DIR, "output/{timestamp}") 
+os.makedirs(report_dir, exist_ok=True)  
 
 def main():
     storage = StorageManager()
