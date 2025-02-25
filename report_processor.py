@@ -6,7 +6,7 @@ from typing import List, Tuple
 class ReportProcessor:
     def __init__(self,
                  group_columns: List[str] = ['PLATFORM', 'CATCODE'],
-                 similarity_threshold: float = 0.7,
+                 similarity_threshold: float = 0.6,
                  top_n: int = 20,
                  summary_path: str = "processing_summary.csv"):  
         self.group_columns = group_columns

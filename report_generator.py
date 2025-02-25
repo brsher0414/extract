@@ -21,16 +21,16 @@ def get_latest_timestamp_dir(parent_dir):
     
     return max(timestamp_dirs)
 
-data_dir = os.path.join(BASE_DIR, "data")
-vectors_dir = os.path.join(data_dir, "vectors")
-indices_dir = os.path.join(data_dir, "indices")
-report_dir = OUTPUT_STRUCTURE["reports"]
-os.makedirs(report_dir, exist_ok=True)  
 
-latest_timestamp = get_latest_timestamp_dir(vectors_dir)
 
 def generator():
     storage = StorageManager()
+    data_dir = os.path.join(BASE_DIR, "data")
+    vectors_dir = os.path.join(data_dir, "vectors")
+    indices_dir = os.path.join(data_dir, "indices")
+    report_dir = storage.get_path("reports")
+
+    latest_timestamp = get_latest_timestamp_dir(vectors_dir)
 
     
     print("加载新数据...")
@@ -55,7 +55,7 @@ def generator():
 
     processor = ReportProcessor(
         group_columns=['PLATFORM', 'CATCODE'],
-        similarity_threshold=0.7,
+        similarity_threshold=0.6,
         top_n=20
     )
 
