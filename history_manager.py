@@ -38,6 +38,7 @@ def get_valid_historical_dirs(parent_dir, exclude_timestamp):
 
 def load_historical_data(storage):
     """加载最新有效历史数据"""
+    storage = StorageManager()
     current_timestamp = storage.timestamp
     print(f"\n当前运行时间戳: {current_timestamp}")
 

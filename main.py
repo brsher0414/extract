@@ -1,4 +1,3 @@
-# main.py
 from config import *
 from datetime import datetime
 import matplotlib.pyplot as plt
@@ -12,7 +11,7 @@ from storage_manager import StorageManager
 from report_processor import ReportProcessor
 import os
 import numpy as np
-from history_manager import get_valid_historical_dirs, load_historical_data  # 新增导入
+from history_manager import get_valid_historical_dirs, load_historical_data  
 
 COLUMN_MAPPING = {
     "jd": 5,
