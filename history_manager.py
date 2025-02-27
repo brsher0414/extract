@@ -1,4 +1,3 @@
-# history_manager.py
 import os
 import re
 from storage_manager import StorageManager

@@ -20,21 +20,21 @@ class ReportProcessor:
         np.save(self.mask_path, mask)
         return np.load(self.mask_path, mmap_mode='r')
 
-    def _generate_summary(self,
-                         raw_data: pd.DataFrame,
-                         processed_data: pd.DataFrame) -> pd.DataFrame:
-        """生成处理统计表"""
-        # 统计原始数据量
+    def _generate_summary(self, raw_data: pd.DataFrame, processed_data: pd.DataFrame) -> pd.DataFrame:
+        raw_data = raw_data.copy()
+        raw_data[self.group_columns] = raw_data[self.group_columns].astype('category')
+        
         raw_counts = raw_data.groupby(
-            self.group_columns, observed=True
+            self.group_columns, observed=True, dropna=False
         ).size().rename('RAW_COUNT').reset_index()
 
-        # 统计处理后数据量
         processed_counts = processed_data.groupby(
-            self.group_columns, observed=True
+            self.group_columns, observed=True, dropna=False
         ).size().rename('PROCESSED_COUNT').reset_index()
 
-        # 全外连接合并统计结果
+        raw_counts[self.group_columns] = raw_counts[self.group_columns].astype('str')
+        processed_counts[self.group_columns] = processed_counts[self.group_columns].astype('str')
+        
         summary = pd.merge(
             raw_counts,
             processed_counts,
@@ -42,14 +42,11 @@ class ReportProcessor:
             how='outer'
         ).fillna(0)
 
-        # 计算过滤数量
         summary['FILTERED_COUNT'] = summary['RAW_COUNT'] - summary['PROCESSED_COUNT']
-        
-        # 添加处理元信息
+        summary = summary[summary['FILTERED_COUNT'] >= 0]  # 确保无负数
+
         summary['THRESHOLD'] = self.threshold
         summary['TOP_N'] = self.top_n
-        
-        # 按原始数据量排序
         return summary.sort_values('RAW_COUNT', ascending=False)
 
     def process(self,
@@ -73,10 +70,10 @@ class ReportProcessor:
                                 'CATCODE': 'category'
                             })
 
-        # 全局分组筛选TopN
         result = filtered_data.groupby(
             self.group_columns,
             observed=True,
+            dropna=False,  
             group_keys=False
         ).apply(
             lambda x: x.nlargest(self.top_n, 'SIMILARITY', keep='first')
