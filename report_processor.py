@@ -8,7 +8,7 @@ class ReportProcessor:
                  group_columns: List[str] = ['PLATFORM', 'CATCODE'],
                  initial_similarity_threshold: float = 0.6,
                  top_n: int = 20,
-                 summary_path: str = "processing_summary.csv"):  
+                 summary_path: str = "processing_summary.csv"):
         self.group_columns = group_columns
         self.initial_threshold = initial_similarity_threshold
         self.top_n = top_n
@@ -22,13 +22,23 @@ class ReportProcessor:
         if os.path.exists(self.mask_path):
             os.remove(self.mask_path)
         
-        # 添加相似度列并处理空值
+        # 创建数据副本并处理空值
         data = data.copy()
         data['SIMILARITY'] = similarity_matrix.mean(axis=1)
         data[self.group_columns] = data[self.group_columns].replace({np.nan: pd.NA})
         
-        # 按分组处理
-        groups = data.groupby(self.group_columns, observed=True, dropna=False, group_keys=False)
+        # 预处理分组列：去除首尾空格
+        for col in self.group_columns:
+            if data[col].dtype == 'object':
+                data[col] = data[col].str.strip()
+        
+        # 执行分组操作
+        groups = data.groupby(
+            self.group_columns, 
+            observed=True, 
+            dropna=False, 
+            group_keys=False
+        )
         
         results = []
         threshold_records = []
@@ -42,27 +52,18 @@ class ReportProcessor:
                 for col, key in zip(self.group_columns, group_keys)
             }
             
-            # --- 核心逻辑修改开始 ---
-            # 第一阶段：阈值内样本降序抽取（最相似在前）
+            # 核心处理逻辑
             threshold_samples = group_data[group_data['SIMILARITY'] <= self.initial_threshold]
             sorted_threshold = threshold_samples.sort_values('SIMILARITY', ascending=False)
             selected_initial = sorted_threshold.head(self.top_n)
             remaining = self.top_n - len(selected_initial)
             
-            # 第二阶段：从未选中的样本中补足（升序抽取最不相似）
             if remaining > 0:
-                # 获取未选中的样本（包括阈值外和阈值内未选中的）
                 unselected_mask = ~group_data.index.isin(selected_initial.index)
                 unselected_samples = group_data[unselected_mask]
-                
-                # 升序排列并补足
                 sorted_unselected = unselected_samples.sort_values('SIMILARITY', ascending=True)
                 selected_unselected = sorted_unselected.head(remaining)
-                
-                # 合并结果
                 selected = pd.concat([selected_initial, selected_unselected], ignore_index=True)
-                
-                # 计算动态阈值（取补足样本中的最大相似度）
                 used_threshold = max(
                     self.initial_threshold,
                     selected_unselected['SIMILARITY'].max() if not selected_unselected.empty else self.initial_threshold
@@ -70,12 +71,11 @@ class ReportProcessor:
             else:
                 selected = selected_initial
                 used_threshold = self.initial_threshold
-            # --- 核心逻辑修改结束 ---
             
             results.append(selected)
             threshold_records.append({**group_dict, 'DYNAMIC_THRESHOLD': used_threshold})
         
-        # 合并所有分组结果
+        # 合并结果
         result_df = pd.concat(results, ignore_index=True)
         
         # 生成统计表
