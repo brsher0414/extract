@@ -53,9 +53,10 @@ def generator():
 
     new_data['SIMILARITY'] = similarities.mean(axis=1)
 
+    # 在report_generator.py中修改这行代码：
     processor = ReportProcessor(
         group_columns=['PLATFORM', 'CATCODE'],
-        similarity_threshold=0.6,
+        initial_similarity_threshold=0.6,  # 参数名称改为initial_similarity_threshold
         top_n=20
     )
 

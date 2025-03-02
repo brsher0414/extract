@@ -77,7 +77,7 @@ def main():
     index_dir = storage.get_path("indices")
     index_path = os.path.join(index_dir, f"index_{storage.timestamp}.faiss")
     
-    with h5py.File(old_vector_path, 'r') as f:
+    with h5py.File(current_old_vector_path, 'r') as f:  # 修正为使用当前向量路径
         se = SimilarityEngine(f['vectors'].shape[1])
         se.build_index(f['vectors'][:])
         se.save_index(index_path) 
@@ -89,18 +89,20 @@ def main():
     # --- 相似度分析 ---
     report_dir = storage.get_path("reports")
     with h5py.File(new_vector_path, 'r') as f:
-        similarities = se.batch_search(f['vectors'][:])
+        new_vectors = f['vectors'][:]
+        similarities = se.batch_search(new_vectors)  # 确保使用新向量
 
     # --- 结果处理 ---
     new_data['SIMILARITY'] = similarities.mean(axis=1)
 
+    # 关键修改点：使用正确的参数名称
     processor = ReportProcessor(
         group_columns=['PLATFORM', 'CATCODE'],
-        similarity_threshold=0.6,
+        initial_similarity_threshold=0.6,  # 参数名修正
         top_n=20
     )
 
-    result_df, summary_df = processor.process(new_data, similarities)  # 解包两个返回值
+    result_df, summary_df = processor.process(new_data, similarities)
 
     # 导出结果数据
     result_df.to_excel(
@@ -115,8 +117,14 @@ def main():
         engine='openpyxl'
     )
 
-    plt.hist(similarities.flatten(), bins=50)
+    # 可视化相似度分布
+    plt.figure(figsize=(10, 6))
+    plt.hist(similarities.flatten(), bins=50, edgecolor='black')
+    plt.title('Similarity Score Distribution')
+    plt.xlabel('Similarity')
+    plt.ylabel('Frequency')
     plt.savefig(os.path.join(report_dir, f"similarity_dist_{storage.timestamp}.png"))
+    plt.close()
 
     print(f"处理完成！所有结果保存在版本目录：{storage.timestamp}")
 
