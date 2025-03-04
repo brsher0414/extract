@@ -4,35 +4,36 @@ import pandas as pd
 from typing import List, Tuple
 
 class ReportProcessor:
-    def __init__(self,
-                 group_columns: List[str] = ['PLATFORM', 'CATCODE'],
-                 initial_similarity_threshold: float = 0.6,
-                 top_n: int = 20,
-                 summary_path: str = "processing_summary.csv"):
+    def __init__(
+        self,
+        group_columns: List[str] = ['MKTID', 'CATCODE'],
+        initial_similarity_threshold: float = 0.6,
+        top_n: int = 20,
+        summary_path: str = "processing_summary.csv"
+    ):
         self.group_columns = group_columns
         self.initial_threshold = initial_similarity_threshold
         self.top_n = top_n
         self.mask_path = "similarity_mask.npy"
         self.summary_path = summary_path
 
-    def process(self,
-               data: pd.DataFrame,
-               similarity_matrix: np.ndarray,
-               save_summary: bool = True) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def process(
+        self,
+        data: pd.DataFrame,
+        similarity_matrix: np.ndarray,
+        save_summary: bool = True
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         if os.path.exists(self.mask_path):
             os.remove(self.mask_path)
         
-        # 创建数据副本并处理空值
         data = data.copy()
         data['SIMILARITY'] = similarity_matrix.mean(axis=1)
         data[self.group_columns] = data[self.group_columns].replace({np.nan: pd.NA})
-        
-        # 预处理分组列：去除首尾空格
         for col in self.group_columns:
             if data[col].dtype == 'object':
                 data[col] = data[col].str.strip()
+            data[col] = data[col].astype('string[pyarrow]') 
         
-        # 执行分组操作
         groups = data.groupby(
             self.group_columns, 
             observed=True, 
@@ -44,15 +45,11 @@ class ReportProcessor:
         threshold_records = []
         
         for group_key, group_data in groups:
-            # 处理分组键中的空值
-            group_keys = tuple(pd.NA if pd.isna(k) else k for k in 
-                             (group_key if isinstance(group_key, tuple) else (group_key,)))
             group_dict = {
-                col: (pd.NA if pd.isna(key) else key)
-                for col, key in zip(self.group_columns, group_keys)
+                col: key if not pd.isna(key) else pd.NA
+                for col, key in zip(self.group_columns, group_key)
             }
             
-            # 核心处理逻辑
             threshold_samples = group_data[group_data['SIMILARITY'] <= self.initial_threshold]
             sorted_threshold = threshold_samples.sort_values('SIMILARITY', ascending=False)
             selected_initial = sorted_threshold.head(self.top_n)
@@ -75,13 +72,9 @@ class ReportProcessor:
             results.append(selected)
             threshold_records.append({**group_dict, 'DYNAMIC_THRESHOLD': used_threshold})
         
-        # 合并结果
         result_df = pd.concat(results, ignore_index=True)
-        
-        # 生成统计表
         summary_table = self._generate_summary(data, result_df)
         
-        # 合并动态阈值信息
         threshold_df = pd.DataFrame(threshold_records)
         if not threshold_df.empty:
             summary_table = pd.merge(
@@ -93,13 +86,6 @@ class ReportProcessor:
         else:
             summary_table['DYNAMIC_THRESHOLD'] = 0.0
         
-        # 空值一致性处理
-        for col in self.group_columns:
-            summary_table[col] = summary_table[col].replace({np.nan: pd.NA})
-            summary_table[col] = summary_table[col].astype('object').where(
-                summary_table[col].notna(), pd.NA
-            )
-        
         summary_table['INITIAL_THRESHOLD'] = self.initial_threshold
         
         if save_summary:
@@ -108,17 +94,14 @@ class ReportProcessor:
         return result_df, summary_table
 
     def _generate_summary(self, raw_data: pd.DataFrame, processed_data: pd.DataFrame) -> pd.DataFrame:
-        # 原始数据分组计数
         raw_counts = raw_data.groupby(
             self.group_columns, observed=True, dropna=False
         ).size().rename('RAW_COUNT').reset_index()
         
-        # 处理结果分组计数
         processed_counts = processed_data.groupby(
             self.group_columns, observed=True, dropna=False
         ).size().rename('PROCESSED_COUNT').reset_index()
 
-        # 合并统计信息
         summary = pd.merge(
             raw_counts,
             processed_counts,
@@ -126,14 +109,10 @@ class ReportProcessor:
             how='outer'
         ).fillna({'RAW_COUNT': 0, 'PROCESSED_COUNT': 0})
         
-        # 恢复空值标识
+        # 确保空值类型统一，避免后续重复处理
         for col in self.group_columns:
-            summary[col] = summary[col].replace({np.nan: pd.NA})
-            summary[col] = summary[col].astype('object').where(
-                summary[col].notna(), pd.NA
-            )
+            summary[col] = summary[col].replace({np.nan: pd.NA}).astype('string[pyarrow]')
         
-        # 计算过滤数量
         summary['FILTERED_COUNT'] = summary['RAW_COUNT'] - summary['PROCESSED_COUNT']
         summary = summary[summary['FILTERED_COUNT'] >= 0]
         summary['TOP_N'] = self.top_n

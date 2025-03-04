@@ -72,12 +72,11 @@ def main():
         )
         vec_engine.vectorize(old_descs, current_old_vector_path, resume=True)
 
-    # --- 构建索引 ---
     print("构建索引...")
     index_dir = storage.get_path("indices")
     index_path = os.path.join(index_dir, f"index_{storage.timestamp}.faiss")
     
-    with h5py.File(current_old_vector_path, 'r') as f:  # 修正为使用当前向量路径
+    with h5py.File(current_old_vector_path, 'r') as f:  
         se = SimilarityEngine(f['vectors'].shape[1])
         se.build_index(f['vectors'][:])
         se.save_index(index_path) 
@@ -95,10 +94,9 @@ def main():
     # --- 结果处理 ---
     new_data['SIMILARITY'] = similarities.mean(axis=1)
 
-    # 关键修改点：使用正确的参数名称
     processor = ReportProcessor(
-        group_columns=['PLATFORM', 'CATCODE'],
-        initial_similarity_threshold=0.6,  # 参数名修正
+        group_columns=['MKTID', 'CATCODE'],
+        initial_similarity_threshold=0.6,  
         top_n=20
     )
 

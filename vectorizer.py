@@ -5,12 +5,12 @@ import torch
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer, AutoModel
 from config import MODEL_NAME, VECTOR_DTYPE, BATCH_SIZE, MAX_LENGTH
-# 推荐参数组合（基础版）
-torch.set_num_threads(4)        # 建议等于物理核心数（4核）
-torch.set_num_interop_threads(2)  # 互操作线程建议较小值
-os.environ["OMP_NUM_THREADS"] = "4"
-os.environ["MKL_NUM_THREADS"] = "4"
-os.environ["TOKENIZERS_PARALLELISM"] = "false"  # 推荐禁用避免冲突
+
+torch.set_num_threads(8)        
+torch.set_num_interop_threads(4)  
+os.environ["OMP_NUM_THREADS"] = "8"
+os.environ["MKL_NUM_THREADS"] = "8"
+os.environ["TOKENIZERS_PARALLELISM"] = "false" 
 
 class Vectorizer:
     def __init__(self):

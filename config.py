@@ -38,7 +38,7 @@ OUTPUT_STRUCTURE = {
 }
 
 # 模型参数
-BATCH_SIZE = 512
-MAX_LENGTH = 64
+BATCH_SIZE = 256
+MAX_LENGTH = 128
 MODEL_NAME = "hfl/chinese-bert-wwm-ext"
 VECTOR_DTYPE = "float32"
